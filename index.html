@@ -6,27 +6,141 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>紙飛機群發機器人</title>
+  <style>
+    .updata_file{
+      display: none;
+    }
+    .updata_area {
+      width: 500px;
+      height: 200px;
+      border-radius: 20px;
+      background-color: #a2ffff;
+    }
+
+    .updata_area.active {
+      background-color: aqua;
+    }
+
+    .updata_area_border{
+      box-sizing: border-box;
+      width: 100%;
+      height: 100%;
+      border-radius: 20px;
+      border: 5px dashed #00000066;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .updata_area.active .updata_area_border {
+      border-color: #ffffff99;
+    }
+
+    .updata_area.active .updata_area_container {
+      pointer-events: none;
+    }
+
+    .updata_area_container_update {
+      cursor: pointer;
+      padding: 2px;
+      border: 1px solid #767676;
+      background-color: #EFEFEF;
+    }
+
+    .upload_zone_enter {
+      border: 10px dashed black;
+      background-clip: content-box;
+    }
+
+    .updata_textarea{
+      width: 200px;
+      height: 400px;
+      resize: none;
+      padding: 5px;
+    }
+  </style>
 </head>
 
 <body>
-  <input id="updataText" type="text" placeholder="請輸入文字">
+  <textarea 
+    id="updataText" 
+    class="updata_textarea"
+    placeholder="請輸入文字"
+    max="4096"
+  ></textarea>
+  <div id="emojiList" class="emoji_list">
+    
+  </div>
   <br>
   上傳檔案最多10個，全部檔案大小再50MB以下
   <br>
   <input 
     type="file" 
     name="updataFile" 
-    id="updataFile" 
-    multiple
+    id="updataFile"
+    class="updata_file"
+    multiple 
     accept=".jpg,.jpeg,.png,.gif,.mp4"
   />
+  <br>
+  <div id="updataArea" class="updata_area">
+    <div class="updata_area_border">
+      <div class="updata_area_container">
+        <label 
+        for="updataFile"
+        class="updata_area_container_update"
+        >上傳</label> 或拖曳到這個區域
+      </div>
+    </div>
+  </div>
   <br>
   <button id="submit">發出</button>
 
   <script>
+    const emojiListElement = document.getElementById('emojiList');
     const updataText = document.getElementById('updataText');
     const updataFile = document.getElementById('updataFile');
+    const updataArea = document.getElementById('updataArea');
     const submit = document.getElementById('submit');
+    let storageFiles = [];
+
+    let emojiList = [ '❤️', '✨', '🔥', '🥺', '😂', '😊', '✔️', '🥰', '👍'];
+
+
+    function preventDefault (e) {
+      // e.stopPropagation(); //終止事件傳導
+      e.preventDefault();  //終止預設行為
+    }
+
+    // 拖曳進去
+    function dragenter(e) {
+      preventDefault(e);
+      updataArea.classList.add("active");
+    }
+    
+    // 拖曳過去
+    function dragover(e) {
+      preventDefault(e);
+    }
+    
+    // 拖曳離開
+    function dragleave(e) {
+      preventDefault(e);
+      updataArea.classList.remove("active");
+    }
+    
+    // 拖曳放下
+    function drop(e) {
+      preventDefault(e);
+      updataArea.classList.remove("active");
+      storageFiles = e.dataTransfer.files;
+    }
+
+
+    updataArea.addEventListener("dragleave", dragleave, false);
+    updataArea.addEventListener("dragenter", dragenter, false);
+    updataArea.addEventListener("dragover", dragover, false);
+    updataArea.addEventListener("drop", drop, false);
 
     // const chartList = [1213797612, -510921927, -1001184977764];
     const chartList = [1213797612];
@@ -48,22 +162,22 @@
     // 獲取檔案大小
     function getFileSize(fileSize) {
       let size = fileSize;
-      if(size > 1048576) {
+      if (size > 1048576) {
         size = (size / 1048576).toFixed(2) + 'MB';
-      }else if( size > 1024 ){
+      } else if (size > 1024) {
         size = (size / 1024).toFixed(2) + 'KB';
-      }else{
+      } else {
         size = size + 'bytes';
       }
       return size;
     }
 
-    function getTelegramFileType (fileName, index, text) {
+    function getTelegramFileType(fileName, index, text) {
       let type;
 
-      if(fileName.indexOf('.mp4') !== -1) {
+      if (fileName.indexOf('.mp4') !== -1) {
         type = 'video';
-      }else{
+      } else {
         type = 'photo';
       }
 
@@ -72,8 +186,9 @@
         media: 'attach://files_' + index
       }
 
-      if(index === 0) {
+      if (index === 0) {
         object.caption = text;
+        object.parse_mode = 'HTML';
       }
       return object;
     }
@@ -82,59 +197,81 @@
 
 
     // 這邊用來判斷檔案是否符合數量和檔案限制
-    updataFile.addEventListener('change', (e)=>{
+    updataFile.addEventListener('change', (e) => {
       let sizeLimit = 52428800; // 50MB
       let totalSize = 0;
 
-      for(let i = 0; i < e.target.files.length; i++) {
+      for (let i = 0; i < e.target.files.length; i++) {
         totalSize += e.target.files[i].size;
       }
-      if(totalSize >= sizeLimit) {
+      if (totalSize >= sizeLimit) {
         e.target.value = null;
         console.log('太大');
-      }else if(e.target.files.length > 10) {
+      } else if (e.target.files.length > 10) {
         e.target.value = null;
         console.log('太多');
       }
+
+      storageFiles = e.target.files;
     })
 
-    submit.addEventListener('click', () => {
+
+
+    // handlerUpdate 處理上傳程序
+    function handlerUpdate() {
       let text = updataText.value;
       let data = new FormData();
       let media = [];
 
-
-      if(updataFile.files.length === 0) {
+      if (storageFiles.length === 0) {
         data.append('method', 'sendMessage');
         data.append('text', text);
-      }else if (updataFile.files.length === 1) {
-        let type = getTelegramFileType(updataFile.files[0].name).type;
+      } else if (storageFiles.length === 1) {
+        let type = getTelegramFileType(storageFiles[0].name).type;
         data.append('method', 'send' + type);
-        data.append(type, updataFile.files[0]);
+        data.append(type, storageFiles[0]);
         data.append('caption', text);
-      }else if(updataFile.files.length <= 10){
+      } else if (storageFiles.length <= 10) {
         data.append('method', 'sendMediaGroup');
-        for(let i = 0 ; i < updataFile.files.length; i++) {
-          data.append('files_' + i, updataFile.files[i]);
-          media.push(getTelegramFileType(updataFile.files[i].name, i, text));
+        for (let i = 0; i < storageFiles.length; i++) {
+          data.append('files_' + i, storageFiles[i]);
+          media.push(getTelegramFileType(storageFiles[i].name, i, text));
         }
         data.append('media', JSON.stringify(media));
-      }else{
+      } else {
         console.log('檔案不可以超過10個');
         return;
       }
-
-
 
       chartList.forEach(value => {
 
         data.delete('chat_id');
         data.append('chat_id', value);
+        data.append('parse_mode', 'HTML');
+
 
         fetch("https://api.telegram.org/bot1860403762:AAFZ2aoOtL__jJd_0vmvX8Crz0C_U5G3vgc/", {
           method: 'post',
           body: data,
         })
+      })
+
+    }
+
+    submit.addEventListener('click', () => {
+
+      handlerUpdate();
+
+    })
+
+    window.addEventListener('load', function() {
+      emojiList.map(value=>{
+        let div = document.createElement('div');
+        div.innerText = value;
+        emojiListElement.appendChild(div);
+      })
+      emojiListElement.addEventListener('click', e=>{
+        updataText.value += e.target.innerText;
       })
     })
 
