@@ -1,0 +1,26 @@
+{
+  "name": "telegram_send_bot",
+  "version": "1.0.0",
+  "description": "紙飛機群發機器人，用來快速轉發一個貼文到下面的所有群組、頻道與個人",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Frenkieli/telegram_send_bot.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Frenkieli/telegram_send_bot/issues"
+  },
+  "homepage": "https://github.com/Frenkieli/telegram_send_bot#readme",
+  "dependencies": {
+    "express": "^4.17.1"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.7"
+  }
+}

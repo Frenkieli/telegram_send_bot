@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>紙飛機群發機器人</title>
+</head>
+
+<body>
+  <input id="updataText" type="text" placeholder="請輸入文字">
+  <br>
+  上傳檔案最多10個，全部檔案大小再50MB以下
+  <br>
+  <input 
+    type="file" 
+    name="updataFile" 
+    id="updataFile" 
+    multiple
+    accept=".jpg,.jpeg,.png,.gif,.mp4"
+  />
+  <br>
+  <button id="submit">發出</button>
+
+  <script>
+    const updataText = document.getElementById('updataText');
+    const updataFile = document.getElementById('updataFile');
+    const submit = document.getElementById('submit');
+
+    // const chartList = [1213797612, -510921927, -1001184977764];
+    const chartList = [1213797612];
+
+    //抓檔檔名，副檔名
+    function getFileInfo(fileStr) {
+      //回傳一個陣列，索引0放的是主檔名, 索引1放的是副檔名
+      let dotPos = fileStr.lastIndexOf(".");
+      let fileName = fileStr.substring(0, dotPos);
+      let fileExt = fileStr.substr(dotPos + 1);
+
+      let file = {
+        name: fileName,
+        ext: fileExt
+      };
+      return file;
+    }
+
+    // 獲取檔案大小
+    function getFileSize(fileSize) {
+      let size = fileSize;
+      if(size > 1048576) {
+        size = (size / 1048576).toFixed(2) + 'MB';
+      }else if( size > 1024 ){
+        size = (size / 1024).toFixed(2) + 'KB';
+      }else{
+        size = size + 'bytes';
+      }
+      return size;
+    }
+
+    function getTelegramFileType (fileName, index, text) {
+      let type;
+
+      if(fileName.indexOf('.mp4') !== -1) {
+        type = 'video';
+      }else{
+        type = 'photo';
+      }
+
+      let object = {
+        type,
+        media: 'attach://files_' + index
+      }
+
+      if(index === 0) {
+        object.caption = text;
+      }
+      return object;
+    }
+
+
+
+
+    // 這邊用來判斷檔案是否符合數量和檔案限制
+    updataFile.addEventListener('change', (e)=>{
+      let sizeLimit = 52428800; // 50MB
+      let totalSize = 0;
+
+      for(let i = 0; i < e.target.files.length; i++) {
+        totalSize += e.target.files[i].size;
+      }
+      if(totalSize >= sizeLimit) {
+        e.target.value = null;
+        console.log('太大');
+      }else if(e.target.files.length > 10) {
+        e.target.value = null;
+        console.log('太多');
+      }
+    })
+
+    submit.addEventListener('click', () => {
+      let text = updataText.value;
+      let data = new FormData();
+      let media = [];
+
+
+      if(updataFile.files.length === 0) {
+        data.append('method', 'sendMessage');
+        data.append('text', text);
+      }else if (updataFile.files.length === 1) {
+        let type = getTelegramFileType(updataFile.files[0].name).type;
+        data.append('method', 'send' + type);
+        data.append(type, updataFile.files[0]);
+        data.append('caption', text);
+      }else if(updataFile.files.length <= 10){
+        data.append('method', 'sendMediaGroup');
+        for(let i = 0 ; i < updataFile.files.length; i++) {
+          data.append('files_' + i, updataFile.files[i]);
+          media.push(getTelegramFileType(updataFile.files[i].name, i, text));
+        }
+        data.append('media', JSON.stringify(media));
+      }else{
+        console.log('檔案不可以超過10個');
+        return;
+      }
+
+
+
+      chartList.forEach(value => {
+
+        data.delete('chat_id');
+        data.append('chat_id', value);
+
+        fetch("https://api.telegram.org/bot1860403762:AAFZ2aoOtL__jJd_0vmvX8Crz0C_U5G3vgc/", {
+          method: 'post',
+          body: data,
+        })
+      })
+    })
+
+
+  </script>
+</body>
+
+</html>
