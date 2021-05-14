@@ -134,6 +134,25 @@
       </div>
     </div>
   </div>
+  <div class="pick_chart">
+    <div
+      class="pick_chart_option"
+      v-for="data in chartList"
+      :key="data.title"
+    >
+      <input 
+        :id="data.title"
+        :value="data"
+        type="checkbox" 
+        v-model="pickChart"
+      />
+      <label
+        :for="data.title"
+      >
+        {{ data.title }}
+      </label>
+    </div>
+  </div>
   <button
     style="cursor: pointer;"
     @click="submitUpdateData"
@@ -152,6 +171,7 @@ export default {
   setup() {
     const { emojiList, chartList } = dataCenter();
     const {
+      pickChart,
       updataText,
       editInlineButton,
       editInlineButtonData,
@@ -174,7 +194,7 @@ export default {
       submitUpdateHandler(
         updataText.value,
         storageFiles,
-        chartList,
+        pickChart.value,
         inlineButtonData.value
       );
     }
@@ -185,6 +205,8 @@ export default {
     }
 
     return {
+      pickChart,
+      chartList,
       updataText,
       inlineButtonData,
       updataFileChange,
@@ -323,6 +345,10 @@ export default {
       }
     }
   }
+}
+
+.pick_chart_option *{
+  cursor: pointer;
 }
 
 .fade-enter-active,

@@ -8,6 +8,8 @@ const defaultButtonData = () => {
 };
 
 export default function inputDataHandler() {
+  const pickChart = ref([]);
+
   const updataText = ref(null);
 
   const editInlineButton = ref(null);
@@ -48,6 +50,7 @@ export default function inputDataHandler() {
   }
 
   return {
+    pickChart,
     updataText,
     editInlineButton,
     editInlineButtonData,
