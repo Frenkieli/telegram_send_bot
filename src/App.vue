@@ -17,6 +17,92 @@
     </div>
   </div>
 
+  <transition name="fade">
+    <div
+      v-show="editInlineButton"
+      class="telegram_inlinebotton_edit"
+      @click="
+        () => {
+          editInlineButton = null;
+        }
+      "
+    >
+      <div class="telegram_inlinebotton_edit_card" @click.stop="() => {}">
+        <div class="telegram_inlinebotton_edit_card_header">設定inline選項</div>
+        <div class="telegram_inlinebotton_edit_card_body">
+          <div class="telegram_inlinebotton_edit_card_body_input">
+            文字: <input v-model="editInlineButtonData.text" />
+          </div>
+          <div class="telegram_inlinebotton_edit_card_body_input">
+            連結: <input v-model="editInlineButtonData.url" />
+          </div>
+        </div>
+        <div class="telegram_inlinebotton_edit_card_footer">
+          <div
+            class="telegram_inlinebotton_edit_card_footer_btn"
+            @click="
+              () => {
+                editInlineButton = null;
+              }
+            "
+          >
+            取消
+          </div>
+          <div
+            class="telegram_inlinebotton_edit_card_footer_btn"
+            @click="deleteCol"
+          >
+            刪除
+          </div>
+        </div>
+      </div>
+    </div>
+  </transition>
+  <div class="telegram_inlinebotton_container">
+    <div
+      v-for="(buttonArray, rowIndex) in inlineButtonData"
+      :key="'inlineRow_' + rowIndex"
+      class="telegram_inlinebotton_container_row"
+    >
+      <div
+        v-for="(data, colIndex) in buttonArray"
+        :key="data.text + colIndex"
+        class="telegram_inlinebotton_container_row_col"
+        @click="
+          () => {
+            editInlineButton = [rowIndex, colIndex];
+            editInlineButtonData = inlineButtonData[rowIndex][colIndex];
+          }
+        "
+      >
+        {{ data.text }}
+      </div>
+      <div
+        class="telegram_inlinebotton_container_row_col option"
+        @click="
+          () => {
+            addCol(rowIndex);
+          }
+        "
+      >
+        新增列
+      </div>
+      <div
+        @click="
+          () => {
+            deleteRow(rowIndex);
+          }
+        "
+        class="telegram_inlinebotton_container_row_col option"
+      >
+        刪除行
+      </div>
+    </div>
+    <div class="telegram_inlinebotton_container_row option" @click="addRol">
+      新增行
+    </div>
+  </div>
+
   <div id="emojiListIcon" class="emoji_list"></div>
   <p>上傳檔案最多10個，全部檔案大小再50MB以下</p>
   <input
@@ -48,13 +134,15 @@
       </div>
     </div>
   </div>
-  <button @click="submitUpdateData">發出</button>
+  <button
+    style="cursor: pointer;"
+    @click="submitUpdateData"
+  >發出</button>
 </template>
 
 <script>
-import { ref } from "vue";
-
 import dataCenter from "./composition/dataCenter";
+import inputDataHandler from "./composition/inputDataHandler";
 import dropHandler from "./composition/dropHandler";
 import filesHandler from "./composition/filesHandler";
 import updateHandler from "./composition/updateHandler";
@@ -62,23 +150,33 @@ import updateHandler from "./composition/updateHandler";
 export default {
   name: "App",
   setup() {
-    const updataText = ref(null);
-
-    const { storageFiles, setStorageFiles } = filesHandler();
     const { emojiList, chartList } = dataCenter();
+    const {
+      updataText,
+      editInlineButton,
+      editInlineButtonData,
+      inlineButtonData,
+      addRol,
+      deleteRow,
+      addCol,
+      deleteCol,
+    } = inputDataHandler();
+    const { storageFiles, setStorageFiles, updataFileChange } = filesHandler();
     const { submitUpdateHandler } = updateHandler();
-    const { areaDropState, areaDragenterHandler, areaDragleaveHandler, areaDropHandler} = dropHandler(setStorageFiles);
-
-
-    function updataFileChange(e) {
-      let result = setStorageFiles(e.target.files);
-      if (result.code === 0) {
-        e.target.value = null;
-      }
-    }
+    const {
+      areaDropState,
+      areaDragenterHandler,
+      areaDragleaveHandler,
+      areaDropHandler,
+    } = dropHandler(setStorageFiles);
 
     function submitUpdateData() {
-      submitUpdateHandler(updataText.value, storageFiles, chartList);
+      submitUpdateHandler(
+        updataText.value,
+        storageFiles,
+        chartList,
+        inlineButtonData.value
+      );
     }
 
     function addEmojs(e) {
@@ -88,6 +186,7 @@ export default {
 
     return {
       updataText,
+      inlineButtonData,
       updataFileChange,
       submitUpdateData,
       areaDropState,
@@ -96,6 +195,12 @@ export default {
       areaDropHandler,
       emojiList,
       addEmojs,
+      editInlineButton,
+      editInlineButtonData,
+      addRol,
+      deleteRow,
+      addCol,
+      deleteCol,
     };
   },
 };
@@ -157,10 +262,76 @@ export default {
 }
 
 .emoji_list {
+  display: inline-block;
 }
 
 .emoji_list_icon {
   cursor: pointer;
   display: inline-block;
+}
+
+.telegram_inlinebotton_container {
+  width: 529px;
+  text-align: center;
+  &_row {
+    cursor: pointer;
+    display: flex;
+    &_col {
+      position: relative;
+      flex-grow: 1;
+      border: 1px solid #000;
+      &.option {
+        flex-grow: 0;
+        width: 87px;
+      }
+    }
+    &.option {
+      justify-content: center;
+      flex-grow: 0;
+      width: 351px;
+      box-sizing: border-box;
+      border: 1px solid #000;
+    }
+  }
+}
+
+.telegram_inlinebotton_edit {
+  z-index: 1;
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #00000066;
+  &_card {
+    padding: 10px;
+    background-color: #fff;
+    &_header {
+    }
+    &_body {
+      &_input {
+      }
+    }
+    &_footer {
+      display: flex;
+      justify-content: space-between;
+      &_btn {
+        cursor: pointer;
+      }
+    }
+  }
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: 0.1s;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
 }
 </style>

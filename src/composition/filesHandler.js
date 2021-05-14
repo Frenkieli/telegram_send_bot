@@ -38,8 +38,21 @@ export default function filesHandler() {
     return data;
   };
 
+  /**
+   * @description 處理檔案上傳後存到儲存區的部分
+   *
+   * @param {*} e
+   */
+  function updataFileChange(e) {
+    let result = setStorageFiles(e.target.files);
+    if (result.code === 0) {
+      e.target.value = null;
+    }
+  }
+
   return {
     storageFiles,
     setStorageFiles,
+    updataFileChange,
   };
 }

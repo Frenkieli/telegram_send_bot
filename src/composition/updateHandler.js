@@ -22,7 +22,7 @@ function _getTelegramFileType(fileName, index, text) {
 }
 
 export default function updateHandler() {
-  function submitUpdateHandler(updataText, storageFiles, chartList) {
+  function submitUpdateHandler(updataText, storageFiles, chartList, inlineButtonData) {
     let data = new FormData();
     let media = [];
 
@@ -51,37 +51,7 @@ export default function updateHandler() {
     data.append(
       "reply_markup",
       JSON.stringify({
-        inline_keyboard: [
-          [
-            {
-              text: "第一排之一",
-              url:
-                "https://translate.google.com.tw/?hl=zh-TW&sl=auto&tl=en&op=translate",
-            },
-            {
-              text: "第一排之二",
-              url:
-                "https://translate.google.com.tw/?hl=zh-TW&sl=auto&tl=en&op=translate",
-            },
-          ],
-          [
-            {
-              text: "第二排之一",
-              url:
-                "https://translate.google.com.tw/?hl=zh-TW&sl=auto&tl=en&op=translate",
-            },
-            {
-              text: "第二排之二",
-              url:
-                "https://translate.google.com.tw/?hl=zh-TW&sl=auto&tl=en&op=translate",
-            },
-            {
-              text: "第二排之三",
-              url:
-                "https://translate.google.com.tw/?hl=zh-TW&sl=auto&tl=en&op=translate",
-            },
-          ],
-        ],
+        inline_keyboard: inlineButtonData,
         resize_keyboard: true,
         one_time_keyboard: false,
       })
