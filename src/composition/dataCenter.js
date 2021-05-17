@@ -8,20 +8,8 @@ export default function filesHandler() {
   });
 
   /** @type {[object]} */
-  const chartList = [
-    {
-      id: 1213797612,
-      title: "個人frenkie",
-    },
-    {
-      id: -510921927,
-      title: '測試群組'
-    },
-    {
-      id: -1001184977764,
-      title: '測試頻道'
-    },
-  ];
+
+  const chartList = JSON.parse(process.env.VUE_APP_CHANNELLIST);
 
   return {
     chartList,

@@ -1,4 +1,5 @@
 // import { ref } from 'vue';
+require('dotenv').config()
 
 function _getTelegramFileType(fileName, index, text) {
   let type;
@@ -62,8 +63,8 @@ export default function updateHandler() {
       data.append("chat_id", value.id);
       data.append("parse_mode", "HTML");
 
-      fetch(
-        "https://api.telegram.org/bot1860403762:AAFZ2aoOtL__jJd_0vmvX8Crz0C_U5G3vgc/",
+      fetch(        
+        "https://api.telegram.org/bot" + process.env.VUE_APP_TOKEN + "/",
         {
           method: "post",
           body: data,
