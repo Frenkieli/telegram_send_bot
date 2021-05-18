@@ -1,379 +1,187 @@
-require('dotenv').config();
+require("dotenv").config();
 const http = require("http");
-const fetch = require('node-fetch');
-const FormData = require('form-data');
+const fetch = require("node-fetch");
+const FormData = require("form-data");
 
 const hostName = "localhost";
 const post = 3000;
+
+
 
 const server = http.createServer((req, res) => {
   // we can access HTTP headers
   req.on("data", (chunk) => {
     let estringa = JSON.parse(chunk);
-    // console.log(estringa);
-    var payload = parseData(estringa);
-    // console.log(payload);
-
-    let url = "https://api.telegram.org/bot" + process.env.VUE_APP_TOKEN + "/";
-    
     let channelList = JSON.parse(process.env.VUE_APP_CHANNELLIST);
-    console.log(channelList, 'channelList');
-    channelList.forEach(value => {
-      let data = new FormData();
-      for(let key in payload) {
-        data.append(key, payload[key]);
+    if (estringa.message && checkUserIdAndChartId(estringa.message.chat)) {
+      if ("media_group_id" in estringa.message) {
+        multitudeForwardHandler(estringa, channelList);
+      } else {
+        singleForwardHandler(estringa, channelList);
       }
-      data.append("parse_mode", "HTML");
-      // data.delete("chat_id");
-      data.append("chat_id", value.id);
-      fetch(url, {
-        "method": "post",
-        "body": data,
-      }).then(res=>res.json()).then(data=>{
-      }).catch(e=>{
-        console.log(e);
-      });
-
-    });
-
-    // res.end(`chunk`);
+    }
   });
+
   req.on("end", () => {
     //end of data
-    res.end(`<h1>This is my first server created by Node.js.</h1>`);
+    res.end(`done`);
   });
-  // res.statusCode = 200;
-  // res.setHeader = ('content-Type', 'text/html');
-  // res.end(`<h1>This is my first server created by Node.js.</h1>`);
 });
 
 server.listen(post, hostName, () => {
-  console.log("伺服器打開囉");
+  console.log(hostName + ":" + post + " - On");
 });
+
+/**
+ * @description 確認正確用戶和正確頻道傳過來的
+ *
+ * @param {*} chatData
+ * @return {*} 回傳布林值 true 是通過 false 是阻擋
+ */
+function checkUserIdAndChartId(chatData) {
+  let chack = false;
+  if (
+    chatData.type === "private" &&
+    (chatData.id === 1213797612 || chatData.id === 937869921)
+  ) {
+    chack = true;
+    console.log("receive user " + chatData.id + " message");
+  }
+  return chack;
+}
+
+/**
+ * @description send telegram massage function
+ *
+ * @param {*} data
+ */
+function sendTelegramMessage(data) {
+  let url = "https://api.telegram.org/bot" + process.env.VUE_APP_TOKEN + "/";
+  fetch(url, {
+    method: "post",
+    body: data,
+  })
+    .then((res) => res.json())
+    .then((data) => {
+      console.log("Send Telegram:");
+      console.log(data);
+    })
+    .catch((e) => {
+      console.log("Server Error:");
+      console.log(e);
+    });
+}
+
+/**
+ * @description define message type
+ *
+ * @param {*} message telegram message
+ * @return {string} message, sticker, photo, video
+ */
+function checkTelegramMessageType(message) {
+  let type;
+  if (message.photo) {
+    type = "photo";
+  } else if (message.video) {
+    type = "video";
+  }
+  return type;
+}
 
 function parseData(estringa) {
   var payload;
-
-  if (estringa?.message?.text) {
+  if (estringa.message.text) {
     payload = {
       method: "sendMessage",
       text: estringa.message.text,
     };
-  } else if (estringa?.message?.sticker) {
+  } else if (estringa.message.sticker) {
     payload = {
       method: "sendSticker",
       sticker: estringa.message.sticker.file_id,
     };
-  }
-  // 有caption
-  else if (estringa?.message?.photo) {
+  } else if (estringa.message.photo) {
     array = estringa.message.photo;
     text = array[1];
     payload = {
       method: "sendPhoto",
       photo: text.file_id,
-      caption: estringa.message.caption,
-      pinned_message: true,
+      caption: estringa.message.caption ? estringa.message.caption : "",
     };
-  } else if (estringa?.message?.video) {
+  } else if (estringa.message.video) {
     vidoe = estringa.message.video;
     payload = {
       method: "sendVideo",
       video: vidoe.file_id,
-      caption: estringa.message.caption ? estringa.message.caption : '無',
-      // pinned_message: true,
-    };
-  } else {
-    payload = {
-      method: "sendMessage",
-      text: "Try other stuff",
+      caption: estringa.message.caption ? estringa.message.caption : "",
     };
   }
   return payload;
 }
 
-let thumb = {
-  file_id:
-    "AAMCBQADGQEAAgLEYKI-scgYxjYAAZpy8Q1fK9DY216FAALoAgAC7dkZVYXveXv5evtz7B5cdHQAAwEAB20AA4RLAAIfBA",
-  file_unique_id: "AQAD7B5cdHQAA4RLAAI",
-  file_size: 10318,
-  width: 320,
-  height: 180,
-};
+/**
+ * @description single message handler
+ *
+ * @param {*} estringa
+ * @param {*} channelList
+ */
+function singleForwardHandler(estringa, channelList) {
+  var payload = parseData(estringa);
+  // console.log(channelList, "channelList");
+  console.log(payload, "payload");
+  channelList.forEach((value) => {
+    let data = new FormData();
+    for (let key in payload) {
+      data.append(key, payload[key]);
+    }
+    data.append("parse_mode", "HTML");
+    // data.delete("chat_id");
+    data.append("chat_id", value.id);
+    sendTelegramMessage(data);
+  });
+}
 
-let text = {
-  update_id: 394237928,
-  message: {
-    message_id: 705,
-    from: {
-      id: 1213797612,
-      is_bot: false,
-      first_name: "驢",
-      last_name: "子",
-      username: "lyumage",
-      language_code: "zh-hans",
-    },
-    chat: {
-      id: 1213797612,
-      first_name: "驢",
-      last_name: "子",
-      username: "lyumage",
-      type: "private",
-    },
-    date: 1621245370,
-    text: "xzlkvkls;aldf",
-  },
-};
+let multitudeSendData = {};
 
-let video = {
-  update_id: 394237929,
-  message: {
-    message_id: 706,
-    from: {
-      id: 1213797612,
-      is_bot: false,
-      first_name: "驢",
-      last_name: "子",
-      username: "lyumage",
-      language_code: "zh-hans",
-    },
-    chat: {
-      id: 1213797612,
-      first_name: "驢",
-      last_name: "子",
-      username: "lyumage",
-      type: "private",
-    },
-    date: 1621245430,
-    video: {
-      duration: 15,
-      width: 1920,
-      height: 1080,
-      file_name: "production ID_4485536 (1).mp4",
-      mime_type: "video/mp4",
-      thumb: [Object],
-      file_id:
-        "BAACAgUAAxkBAAICwmCiPfUhsgXdaEpk5EYhrlyhVaPJAALlAgAC7dkZVdhxqNw38Y_sHwQ",
-      file_unique_id: "AgAD5QIAAu3ZGVU",
-      file_size: 5837999,
-    },
-  },
-};
+/**
+ * @description multitude message handler
+ *
+ * @param {*} estringa
+ * @param {*} channelList
+ * @return {*}
+ */
+function multitudeForwardHandler(estringa, channelList) {
+  let object = {
+    type: checkTelegramMessageType(estringa.message),
+    media:
+      estringa.message.video?.file_id || estringa.message?.photo[1].file_id,
+    caption: estringa.message.caption ? estringa.message.caption : "",
+  };
 
-let videoCaption = {
-  update_id: 394237930,
-  message: {
-    message_id: 707,
-    from: {
-      id: 1213797612,
-      is_bot: false,
-      first_name: "驢",
-      last_name: "子",
-      username: "lyumage",
-      language_code: "zh-hans",
-    },
-    chat: {
-      id: 1213797612,
-      first_name: "驢",
-      last_name: "子",
-      username: "lyumage",
-      type: "private",
-    },
-    date: 1621245494,
-    video: {
-      duration: 15,
-      width: 1920,
-      height: 1080,
-      file_name: "production ID_4485536 (1).mp4",
-      mime_type: "video/mp4",
-      thumb: [Object],
-      file_id:
-        "BAACAgUAAxkBAAICw2CiPjU7SiomGjMSp02Npa2rltp2AALmAgAC7dkZVWMBxs48BjidHwQ",
-      file_unique_id: "AgAD5gIAAu3ZGVU",
-      file_size: 5837999,
-    },
-    caption: "asdasd",
-  },
-};
+  if (!multitudeSendData[estringa.message.media_group_id]) {
+    multitudeSendData[estringa.message.media_group_id] = {
+      timeout: null,
+      data: [],
+    };
+  }
+  multitudeSendData[estringa.message.media_group_id].data.push(object);
 
-let photoArrayData = {
-  file_id:
-    "AgACAgUAAxkBAAICyWCiP7JNJc6O3Lph_pWVqRGzlPPnAALTrDEb7dkZVcUgx7-J26rN56WucHQAAwEAAwIAA3kAA4j2AQABHwQ",
-  file_unique_id: "AQAD56WucHQAA4j2AQAB",
-  file_size: 24704,
-  width: 960,
-  height: 444,
-}; // 大中小預覽圖類推
-
-let photo = {
-  update_id: 394237932,
-  message: {
-    message_id: 709,
-    from: {
-      id: 1213797612,
-      is_bot: false,
-      first_name: "驢",
-      last_name: "子",
-      username: "lyumage",
-      language_code: "zh-hans",
+  clearTimeout(multitudeSendData[estringa.message.media_group_id].timeout);
+  multitudeSendData[estringa.message.media_group_id].timeout = setTimeout(
+    () => {
+      channelList.forEach((value) => {
+        let data = new FormData();
+        data.append("method", "sendMediaGroup");
+        data.append(
+          "media",
+          JSON.stringify(
+            multitudeSendData[estringa.message.media_group_id].data
+          )
+        );
+        data.append("chat_id", value.id);
+        sendTelegramMessage(data);
+      });
     },
-    chat: {
-      id: 1213797612,
-      first_name: "驢",
-      last_name: "子",
-      username: "lyumage",
-      type: "private",
-    },
-    date: 1621245677,
-    photo: [[Object], [Object], [Object]],
-  },
-};
-
-let photoCaption = {
-  update_id: 394237933,
-  message: {
-    message_id: 710,
-    from: {
-      id: 1213797612,
-      is_bot: false,
-      first_name: "驢",
-      last_name: "子",
-      username: "lyumage",
-      language_code: "zh-hans",
-    },
-    chat: {
-      id: 1213797612,
-      first_name: "驢",
-      last_name: "子",
-      username: "lyumage",
-      type: "private",
-    },
-    date: 1621245726,
-    photo: [[Object], [Object], [Object]],
-    caption: "dasd",
-  },
-};
-
-// 兩個東西他會分兩次發過來
-let groptItem1 = {
-  update_id: 394237939,
-  message: {
-    message_id: 716,
-    from: {
-      id: 1213797612,
-      is_bot: false,
-      first_name: "驢",
-      last_name: "子",
-      username: "lyumage",
-      language_code: "zh-hans",
-    },
-    chat: {
-      id: 1213797612,
-      first_name: "驢",
-      last_name: "子",
-      username: "lyumage",
-      type: "private",
-    },
-    date: 1621246231,
-    media_group_id: "12969969849926405",
-    photo: [[Object], [Object], [Object]],
-  },
-};
-
-let groptItem2 = {
-  update_id: 394237940,
-  message: {
-    message_id: 717,
-    from: {
-      id: 1213797612,
-      is_bot: false,
-      first_name: "驢",
-      last_name: "子",
-      username: "lyumage",
-      language_code: "zh-hans",
-    },
-    chat: {
-      id: 1213797612,
-      first_name: "驢",
-      last_name: "子",
-      username: "lyumage",
-      type: "private",
-    },
-    date: 1621246231,
-    media_group_id: "12969969849926405",
-    video: {
-      duration: 15,
-      width: 1920,
-      height: 1080,
-      file_name: "production ID_4485536 (1).mp4",
-      mime_type: "video/mp4",
-      thumb: [Object],
-      file_id:
-        "BAACAgUAAxkBAAICzWCiQRcO31xDZDKk5K1pEmdsrNoBAALtAgAC7dkZVQRjbZPwFfThHwQ",
-      file_unique_id: "AgAD7QIAAu3ZGVU",
-      file_size: 5837999,
-    },
-  },
-};
-
-let groupItemCaption1 = {
-  update_id: 394237941,
-  message: {
-    message_id: 718,
-    from: {
-      id: 1213797612,
-      is_bot: false,
-      first_name: "驢",
-      last_name: "子",
-      username: "lyumage",
-      language_code: "zh-hans",
-    },
-    chat: {
-      id: 1213797612,
-      first_name: "驢",
-      last_name: "子",
-      username: "lyumage",
-      type: "private",
-    },
-    date: 1621246396,
-    media_group_id: "12969971170261125",
-    photo: [[Object], [Object], [Object]],
-    caption: "sdfsaf",
-  },
-};
-
-let groupItemCaption2 = {
-  update_id: 394237942,
-  message: {
-    message_id: 719,
-    from: {
-      id: 1213797612,
-      is_bot: false,
-      first_name: "驢",
-      last_name: "子",
-      username: "lyumage",
-      language_code: "zh-hans",
-    },
-    chat: {
-      id: 1213797612,
-      first_name: "驢",
-      last_name: "子",
-      username: "lyumage",
-      type: "private",
-    },
-    date: 1621246396,
-    media_group_id: "12969971170261125",
-    video: {
-      duration: 15,
-      width: 1920,
-      height: 1080,
-      file_name: "production ID_4485536 (1).mp4",
-      mime_type: "video/mp4",
-      thumb: [Object],
-      file_id:
-        "BAACAgUAAxkBAAICz2CiQbyWctGjz18k_i3ehwXBAUO2AALuAgAC7dkZVX1Is68fMM19HwQ",
-      file_unique_id: "AgAD7gIAAu3ZGVU",
-      file_size: 5837999,
-    },
-  },
-};
+    1000
+  );
+}
