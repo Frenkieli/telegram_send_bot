@@ -12,9 +12,9 @@
 
 ## 紙飛機機器人指令
 
-https://api.telegram.org/bot1860403762:AAFZ2aoOtL__jJd_0vmvX8Crz0C_U5G3vgc/deleteWebhook
+https://api.telegram.org/bot1860403762:AAFCvMC4FznJ-fgQ82DA5Bdo_ILD1djXjAE/deleteWebhook
 
-https://api.telegram.org/bot1860403762:AAFZ2aoOtL__jJd_0vmvX8Crz0C_U5G3vgc/setWebhook?url=https://3515469b3cc9.ngrok.io
+https://api.telegram.org/bot1860403762:AAFCvMC4FznJ-fgQ82DA5Bdo_ILD1djXjAE/setWebhook?url=https://a0e36174bff7.ngrok.io
 
 機器人父親指令
 

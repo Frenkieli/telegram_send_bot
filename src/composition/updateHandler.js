@@ -64,7 +64,7 @@ export default function updateHandler() {
       data.append("parse_mode", "HTML");
 
       fetch(        
-        "https://api.telegram.org/bot" + process.env.VUE_APP_TOKEN + "/",
+        "https://api.telegram.org/bot" + process.env.VUE_APP_TOKEN2 + "/",
         {
           method: "post",
           body: data,
