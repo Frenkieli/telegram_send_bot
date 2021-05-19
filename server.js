@@ -1,4 +1,6 @@
-require("dotenv").config();
+require("dotenv").config({
+  path: '.env.local'
+});
 const http = require("http");
 const fetch = require("node-fetch");
 const FormData = require("form-data");
@@ -6,18 +8,29 @@ const FormData = require("form-data");
 const hostName = "localhost";
 const post = 3000;
 
+let channelList = [];
 
+JSON.parse(process.env.VUE_APP_CHANNELLIST).forEach((value, index) => {
+  channelList.push(
+    Object.assign(
+      {
+        enable: false,
+      },
+      value
+    )
+  );
+});
 
 const server = http.createServer((req, res) => {
   // we can access HTTP headers
   req.on("data", (chunk) => {
     let estringa = JSON.parse(chunk);
-    let channelList = JSON.parse(process.env.VUE_APP_CHANNELLIST);
+    // console.log(estringa);
     if (estringa.message && checkUserIdAndChartId(estringa.message.chat)) {
       if ("media_group_id" in estringa.message) {
-        multitudeForwardHandler(estringa, channelList);
+        multitudeForwardHandler(estringa);
       } else {
-        singleForwardHandler(estringa, channelList);
+        singleForwardHandler(estringa);
       }
     }
   });
@@ -51,25 +64,64 @@ function checkUserIdAndChartId(chatData) {
 }
 
 /**
- * @description send telegram massage function
+ * @description send massage to telegram
  *
- * @param {*} data
+ * @param {FormData} data
+ * @return {Promise} Promise
  */
 function sendTelegramMessage(data) {
-  let url = "https://api.telegram.org/bot" + process.env.VUE_APP_TOKEN + "/";
+  const url = "https://api.telegram.org/bot" + process.env.VUE_APP_TOKEN + "/";
+
   fetch(url, {
     method: "post",
     body: data,
   })
     .then((res) => res.json())
     .then((data) => {
-      console.log("Send Telegram:");
-      console.log(data);
+      // console.log("Send Telegram:");
+      // console.log(data);
     })
     .catch((e) => {
-      console.log("Server Error:");
-      console.log(e);
+      // console.log("Server Error:");
+      // console.log(e);
     });
+}
+
+/**
+ * @description send telegram Group massage function
+ *
+ * @param {object} rawData
+ */
+function sendTelegramGroupMessage(rawData) {
+  channelList.forEach((value) => {
+    if (value.enable) {
+      let data = jsonTransformToFormData(
+        Object.assign(
+          {
+            parse_mode: "HTML",
+            chat_id: value.id,
+          },
+          rawData
+        )
+      );
+
+      sendTelegramMessage(data);
+    }
+  });
+}
+
+/**
+ * @description transform data to formdata
+ *
+ * @param {*} rawData object
+ * @return {FormData}
+ */
+function jsonTransformToFormData(rawData) {
+  let data = new FormData();
+  for (let key in rawData) {
+    data.append(key, rawData[key]);
+  }
+  return data;
 }
 
 /**
@@ -123,22 +175,117 @@ function parseData(estringa) {
  * @description single message handler
  *
  * @param {*} estringa
- * @param {*} channelList
  */
-function singleForwardHandler(estringa, channelList) {
+function singleForwardHandler(estringa) {
   var payload = parseData(estringa);
   // console.log(channelList, "channelList");
+  if (payload.method === "sendMessage") {
+    let order = payload.text.split(" ")[0].slice(1, 10);
+    orderAssign(payload, order, estringa.message.from.id);
+  } else {
+    sendTelegramGroupMessage(payload);
+  }
+}
+
+function orderAssign(payload, order, user) {
+  let data = {
+    chat_id: user,
+  };
+  let inText;
+  console.log(user, "user");
   console.log(payload, "payload");
-  channelList.forEach((value) => {
-    let data = new FormData();
-    for (let key in payload) {
-      data.append(key, payload[key]);
+  console.log(order, "order");
+  switch (order) {
+    case "help":
+      orderHelpHandler(data);
+      break;
+    case "enable":
+      inText = payload.text.split(" ");
+      if(inText[inText.length - 1]) channelList[inText[inText.length - 1]].enable = true;
+      orderListHandler(data);
+      break;
+    case "disenable":
+      inText = payload.text.split(" ");
+      if(inText[inText.length - 1]) channelList[inText[inText.length - 1]].enable = false;
+    case "list":
+      orderListHandler(data);
+      break;
+    default:
+      sendTelegramGroupMessage(payload);
+      break;
+  }
+}
+
+/**
+ * @description help command handler
+ *
+ * @param {*} data
+ */
+function orderHelpHandler(data) {
+  let text = jsonTransformToFormData(
+    Object.assign(
+      {
+        method: "sendMessage",
+        text: "都說明那麼多了還要幫助？？自己看！！",
+      },
+      data
+    )
+  );
+  let sticker = jsonTransformToFormData(
+    Object.assign(
+      {
+        method: "sendSticker",
+        sticker:
+          "CAACAgIAAxkBAAIFNmCkgDbiIbn5DL6FeYLgqk3pW4vvAAIagQACns4LAAHvKISRTQSfBx8E",
+      },
+      data
+    )
+  );
+  sendTelegramMessage(sticker);
+  setTimeout(() => {
+    sendTelegramMessage(text);
+  }, 50);
+}
+
+/**
+ * @description handler list command
+ *
+ * @param {*} data
+ */
+function orderListHandler(data) {
+  let enableChannelsList = [];
+  let keyboardData = [];
+  channelList.forEach((value, index) => {
+    if (value.enable) {
+      enableChannelsList.push(value.title);
+      keyboardData.push([
+        {
+          text: "/disenable " + value.title + " " + index,
+        },
+      ]);
+    } else {
+      keyboardData.push([
+        {
+          text: "/enable " + value.title + " " + index,
+        },
+      ]);
     }
-    data.append("parse_mode", "HTML");
-    // data.delete("chat_id");
-    data.append("chat_id", value.id);
-    sendTelegramMessage(data);
   });
+  let text = jsonTransformToFormData(
+    Object.assign(
+      {
+        method: "sendMessage",
+        text: "=====目前發送頻道======\n" + enableChannelsList.join("\n"),
+        reply_markup: JSON.stringify({
+          keyboard: keyboardData,
+          resize_keyboard: true,
+          one_time_keyboard: false,
+        }),
+      },
+      data
+    )
+  );
+  sendTelegramMessage(text);
 }
 
 let multitudeSendData = {};
@@ -147,10 +294,9 @@ let multitudeSendData = {};
  * @description multitude message handler
  *
  * @param {*} estringa
- * @param {*} channelList
  * @return {*}
  */
-function multitudeForwardHandler(estringa, channelList) {
+function multitudeForwardHandler(estringa) {
   let object = {
     type: checkTelegramMessageType(estringa.message),
     media:
@@ -169,17 +315,11 @@ function multitudeForwardHandler(estringa, channelList) {
   clearTimeout(multitudeSendData[estringa.message.media_group_id].timeout);
   multitudeSendData[estringa.message.media_group_id].timeout = setTimeout(
     () => {
-      channelList.forEach((value) => {
-        let data = new FormData();
-        data.append("method", "sendMediaGroup");
-        data.append(
-          "media",
-          JSON.stringify(
-            multitudeSendData[estringa.message.media_group_id].data
-          )
-        );
-        data.append("chat_id", value.id);
-        sendTelegramMessage(data);
+      sendTelegramGroupMessage({
+        method: "sendMediaGroup",
+        media: JSON.stringify(
+          multitudeSendData[estringa.message.media_group_id].data
+        ),
       });
     },
     1000
