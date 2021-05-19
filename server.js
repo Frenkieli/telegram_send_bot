@@ -179,7 +179,7 @@ function parseData(estringa) {
 function singleForwardHandler(estringa) {
   var payload = parseData(estringa);
   // console.log(channelList, "channelList");
-  if (payload.method === "sendMessage") {
+  if (payload?.method === "sendMessage") {
     let order = payload.text.split(" ")[0].slice(1, 10);
     orderAssign(payload, order, estringa.message.from.id);
   } else {
