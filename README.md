@@ -14,7 +14,7 @@
 
 https://api.telegram.org/bot1860403762:AAFCvMC4FznJ-fgQ82DA5Bdo_ILD1djXjAE/deleteWebhook
 
-https://api.telegram.org/bot1860403762:AAFCvMC4FznJ-fgQ82DA5Bdo_ILD1djXjAE/setWebhook?url=https://a0e36174bff7.ngrok.io
+https://api.telegram.org/bot1860403762:AAFCvMC4FznJ-fgQ82DA5Bdo_ILD1djXjAE/setWebhook?url=https://8c2557636f9f.ngrok.io
 
 機器人父親指令
 

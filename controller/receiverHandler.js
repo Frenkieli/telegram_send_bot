@@ -1,12 +1,5 @@
-require("dotenv").config({
-  path: '.env.local'
-});
-const http = require("http");
 const fetch = require("node-fetch");
 const FormData = require("form-data");
-
-const hostName = "localhost";
-const post = 3000;
 
 let channelList = [];
 
@@ -21,29 +14,21 @@ JSON.parse(process.env.VUE_APP_CHANNELLIST).forEach((value, index) => {
   );
 });
 
-const server = http.createServer((req, res) => {
-  // we can access HTTP headers
-  req.on("data", (chunk) => {
-    let estringa = JSON.parse(chunk);
-    // console.log(estringa);
-    if (estringa.message && checkUserIdAndChartId(estringa.message.chat)) {
-      if ("media_group_id" in estringa.message) {
-        multitudeForwardHandler(estringa);
-      } else {
-        singleForwardHandler(estringa);
-      }
+function receiver(req, res) {
+  let estringa = req.body;
+  if (estringa.message && checkUserIdAndChartId(estringa.message.chat)) {
+    if ("media_group_id" in estringa.message) {
+      multitudeForwardHandler(estringa);
+    } else {
+      singleForwardHandler(estringa);
     }
-  });
-
-  req.on("end", () => {
-    //end of data
-    res.end(`done`);
-  });
-});
-
-server.listen(post, hostName, () => {
-  console.log(hostName + ":" + post + " - On");
-});
+  } else if (estringa.my_chat_member) {
+    console.log(estringa.my_chat_member);
+    // console.log(estringa.my_chat_member.old_chat_member.user);
+    // console.log(estringa.my_chat_member.new_chat_member.user);
+  }
+  res.end();
+}
 
 /**
  * @description 確認正確用戶和正確頻道傳過來的
@@ -201,12 +186,14 @@ function orderAssign(payload, order, user) {
       break;
     case "enable":
       inText = payload.text.split(" ");
-      if(inText[inText.length - 1]) channelList[inText[inText.length - 1]].enable = true;
+      if (inText[inText.length - 1])
+        channelList[inText[inText.length - 1]].enable = true;
       orderListHandler(data);
       break;
     case "disenable":
       inText = payload.text.split(" ");
-      if(inText[inText.length - 1]) channelList[inText[inText.length - 1]].enable = false;
+      if (inText[inText.length - 1])
+        channelList[inText[inText.length - 1]].enable = false;
     case "list":
       orderListHandler(data);
       break;
@@ -325,3 +312,7 @@ function multitudeForwardHandler(estringa) {
     1000
   );
 }
+
+module.exports = {
+  receiver,
+};
