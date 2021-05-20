@@ -29,6 +29,3 @@ reply_markup
 
 
 .env
-
-VUE_APP_TOKEN = 1860403762:AAFCvMC4FznJ-fgQ82DA5Bdo_ILD1djXjAE
-VUE_APP_CHANNELLIST = [{"id":1213797612,"title":"個人frenkie"},{"id":-510921927,"title":"測試群組"},{"id":-1001184977764,"title":"測試頻道"}]

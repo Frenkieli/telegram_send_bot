@@ -10,11 +10,24 @@ JSON.parse(process.env.VUE_APP_CHANNELLIST).forEach((value, index) => {
     )
   );
 });
+/**
+ * @description cache data center
+ *
+ * @class DataBus
+ */
 class DataBus {
   constructor(channelList) {
     this.channelList = channelList;
   }
 
+  /**
+   * @description create instance
+   *
+   * @static
+   * @param {*} channelList
+   * @return {*} instance
+   * @memberof DataBus
+   */
   static getInstance(channelList) {
     if (!this.instance) {
       this.instance = new DataBus(channelList);
@@ -22,6 +35,13 @@ class DataBus {
     return this.instance;
   }
 
+  /**
+   * @description get cache data
+   *
+   * @param {string} type which data
+   * @return {*} data
+   * @memberof DataBus
+   */
   getData(type) {
     let data;
     switch (type) {
@@ -36,6 +56,14 @@ class DataBus {
     return data;
   }
 
+  /**
+   * @description set cache data
+   *
+   * @param { string } type
+   * @param { string } command
+   * @param {*} data
+   * @memberof DataBus
+   */
   setData(type, command, data) {
     switch (type) {
       case "channelList":
@@ -47,6 +75,13 @@ class DataBus {
     }
   }
 
+  /**
+   * @description set channellist data
+   * @param {string} command
+   * @param {*} data
+   * @private
+   * @memberof DataBus
+   */
   #setChannelList(command, data) {
     switch (command) {
       case "add":
