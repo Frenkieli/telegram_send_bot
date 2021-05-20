@@ -20,10 +20,10 @@ class EnableCommand extends Command {
     if (
       inText.length > 1 &&
       inText[inText.length - 1] &&
-      inText.length > parseInt(inText[inText.length - 1]) + 1
+      this.channelList.has(parseInt(inText[inText.length - 1]))
     )
       this.setChannelList("modifyIndex", {
-        index: inText[inText.length - 1],
+        key: parseInt(inText[inText.length - 1]),
         enable: enable,
       });
     listCommand.handler({ data });

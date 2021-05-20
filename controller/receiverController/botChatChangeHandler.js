@@ -1,11 +1,8 @@
-const { dataBus, ModifyData } = require("../../models/dataBus");
-
-const channelList = dataBus.getData("channelList");
+const { ModifyData } = require("../../models/dataBus");
 
 class BotChatChangeHandler extends ModifyData {
   constructor() {
     super();
-    this.channelList = channelList;
   }
 
   /**

@@ -1,7 +1,8 @@
-let channelList = [];
+let channelList = new Map();
 
-JSON.parse(process.env.VUE_APP_CHANNELLIST).forEach((value, index) => {
-  channelList.push(
+JSON.parse(process.env.VUE_APP_CHANNELLIST).forEach((value) => {
+  channelList.set(
+    value.id,
     Object.assign(
       {
         enable: false,
@@ -83,36 +84,31 @@ class DataBus {
    * @memberof DataBus
    */
   #setChannelList(command, data) {
-    let index;
+    let channelKey;
     switch (command) {
       case "addChannel":
-        console.log("Bot join channel : " + data.title);
-        this.channelList.push(data);
+        if (!this.channelList.has(data.id)) {
+          console.log("Bot join channel : " + data.title);
+          this.channelList.set(data.id, data);
+        }
         break;
       case "deleteChannel":
-        for (let i = 0; i < this.channelList.length; i++) {
-          if (data.id === this.channelList[i].id) {
-            index = i;
-            console.log("Bot leave channel : " + data.title);
-            break;
-          }
+        if (this.channelList.has(data.id)) {
+          console.log("Bot leave channel : " + data.title);
+          this.channelList.delete(data.id);
         }
-        this.channelList.splice(index, 1);
         break;
       case "modifyIndex":
-        index = data.index;
-        delete data.index;
-        for (let key in data) {
-          this.channelList[index][key] = data[key];
-        }
+        channelKey = data.key;
+        delete data.key;
+        let object = this.channelList.get(channelKey);
+        this.channelList.set(channelKey, Object.assign(object, data));
         break;
       default:
         break;
     }
   }
 }
-
-let dataBus = new DataBus(channelList);
 
 /**
  * @description when class need to modify data
@@ -131,6 +127,8 @@ class ModifyData {
     dataBus.setData("channelList", command, data);
   }
 }
+
+let dataBus = new DataBus(channelList);
 
 module.exports = {
   dataBus,
