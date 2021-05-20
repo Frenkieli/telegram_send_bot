@@ -83,14 +83,26 @@ class DataBus {
    * @memberof DataBus
    */
   #setChannelList(command, data) {
+    let index;
     switch (command) {
-      case "add":
-        console.log("addCommand", data);
+      case "addChannel":
+        console.log("Bot join channel : " + data.title);
+        this.channelList.push(data);
+        break;
+      case "deleteChannel":
+        for (let i = 0; i < this.channelList.length; i++) {
+          if (data.id === this.channelList[i].id) {
+            index = i;
+            console.log("Bot leave channel : " + data.title);
+            break;
+          }
+        }
+        this.channelList.splice(index, 1);
         break;
       case "modifyIndex":
-        let index = data.index;
+        index = data.index;
         delete data.index;
-        for(let key in data) {
+        for (let key in data) {
           this.channelList[index][key] = data[key];
         }
         break;
@@ -102,6 +114,25 @@ class DataBus {
 
 let dataBus = new DataBus(channelList);
 
+/**
+ * @description when class need to modify data
+ *
+ * @class ModifyData
+ */
+class ModifyData {
+  /**
+   * @description set data
+   *
+   * @param { string } command
+   * @param {*} data
+   * @memberof Command
+   */
+  setChannelList(command, data) {
+    dataBus.setData("channelList", command, data);
+  }
+}
+
 module.exports = {
   dataBus,
+  ModifyData,
 };

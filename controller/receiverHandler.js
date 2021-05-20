@@ -1,6 +1,9 @@
 const { parseDataToTelegram } = require("./dataTransformHandler");
 const { sendTelegramGroupMessage } = require("./telegramHandler");
 const { commandAssign } = require("./commandController/commandAssign");
+const {
+  botChatChangeHandler,
+} = require("./receiverController/botChatChangeHandler");
 
 /**
  * @description receive telegram data
@@ -17,9 +20,7 @@ function receiver(req, res) {
       singleForwardHandler(estringa);
     }
   } else if (estringa.my_chat_member) {
-    console.log(estringa.my_chat_member);
-    // console.log(estringa.my_chat_member.old_chat_member.user);
-    // console.log(estringa.my_chat_member.new_chat_member.user);
+    botChatChangeHandler.handler(estringa);
   }
   res.end();
 }

@@ -17,7 +17,11 @@ class EnableCommand extends Command {
    */
   handler({ data, payload, enable }) {
     let inText = payload.text.split(" ");
-    if (inText.length > 1 && inText[inText.length - 1])
+    if (
+      inText.length > 1 &&
+      inText[inText.length - 1] &&
+      inText.length > parseInt(inText[inText.length - 1]) + 1
+    )
       this.setChannelList("modifyIndex", {
         index: inText[inText.length - 1],
         enable: enable,

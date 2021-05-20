@@ -4,7 +4,7 @@ const {
 } = require("../telegramHandler");
 const { objectTransformToFormData } = require("../dataTransformHandler");
 
-const { dataBus } = require("../../models/dataBus");
+const { dataBus, ModifyData } = require("../../models/dataBus");
 
 const channelList = dataBus.getData("channelList");
 
@@ -13,8 +13,9 @@ const channelList = dataBus.getData("channelList");
  *
  * @class Command
  */
-class Command {
+class Command extends ModifyData {
   constructor() {
+    super();
     this.objectTransformToFormData = objectTransformToFormData;
     this.sendTelegramMessage = sendTelegramMessage;
     this.sendTelegramGroupMessage = sendTelegramGroupMessage;
@@ -33,17 +34,6 @@ class Command {
       this.instance = new this();
     }
     return this.instance;
-  }
-
-  /**
-   * @description set channel List
-   *
-   * @param { string } command
-   * @param {*} data
-   * @memberof Command
-   */
-  setChannelList(command, data) {
-    dataBus.setData("channelList", command, data);
   }
 }
 
