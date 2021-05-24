@@ -22,14 +22,17 @@ class BotChatChangeHandler extends ModifyData {
   handler(estringa) {
     const my_chat_member = estringa.my_chat_member;
     // console.log(my_chat_member);
+
     if (
-      my_chat_member.new_chat_member.status === "member" &&
+      (my_chat_member.new_chat_member.status === "member" ||
+        my_chat_member.new_chat_member.status === "administrator") &&
       my_chat_member.old_chat_member.status === "left"
     ) {
       this.setChannelList("addChannel", my_chat_member.chat);
     } else if (
       my_chat_member.new_chat_member.status === "left" &&
-      my_chat_member.old_chat_member.status === "member"
+      (my_chat_member.old_chat_member.status === "member" ||
+        my_chat_member.old_chat_member.status === "administrator")
     ) {
       this.setChannelList("deleteChannel", my_chat_member.chat);
     }
