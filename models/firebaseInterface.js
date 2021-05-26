@@ -15,8 +15,13 @@ var db = firebase.firestore();
 
 console.log('firebase database connect success');
 
-class FirebaseController{
-  constructor(){
+/**
+ * @description firebase interface
+ *
+ * @class FirebaseController
+ */
+class FirebaseController {
+  constructor() {
     this.firebase = db;
   }
 
@@ -34,32 +39,92 @@ class FirebaseController{
     return this.instance;
   }
 
-  create( collection, doc, data) {
-    return new Promise((resolve, reject)=>{
-      let ref = db.collection(collection).doc(doc);
-      ref.set(data).then(res=>{
-        console.log('create succes')
+
+  /**
+   * @description get database data
+   *
+   * @param { string } collection
+   * @return { object } get data 
+   * @memberof FirebaseController
+   */
+  get(collection) {
+    return new Promise((resolve, reject) => {
+      let data = {};
+      let ref = db.collection(collection);
+      ref.get().then(querySnapshot => {
+        querySnapshot.forEach(doc => {
+          data[doc.id] = doc.data();
+        });
+        resolve(data);
       })
     })
   }
 
-  update() {
-    ref.set({
-      bad:15,
-      eat:5,
-      good: 666
-    },{merge: true}).then(() => {
-      console.log('set data successful');
-    });
+  /**
+   * @description create data
+   *
+   * @param {string} collection collection name
+   * @param {string} doc doc name
+   * @param {*} data create data
+   * @return {boolean} true 
+   * @memberof FirebaseController
+   */
+  create(collection, doc, data) {
+    return new Promise((resolve, reject) => {
+      let ref = db.collection(collection).doc(doc);
+      ref.set(data).then(() => {
+        resolve(true);
+      }).catch(() => {
+        reject('create error');
+      })
+    })
+  }
+
+  /**
+   * @description update data
+   *
+   * @param {string} collection collection name
+   * @param {string} doc doc name
+   * @param {*} data update data
+   * @return {boolean} true 
+   * @memberof FirebaseController
+   */
+  update(collection, doc, data) {
+    return new Promise((resolve, reject) => {
+      let ref = db.collection(collection).doc(doc);
+      ref.update(data).then(() => {
+        resolve(true);
+        console.log('update succes')
+      }).catch(() => {
+        reject('update error');
+      })
+    })
+  }
+
+  /**
+   * @description delete data
+   *
+   * @param {string} collection collection name
+   * @param {string} doc doc name
+   * @return {boolean} true 
+   * @memberof FirebaseController
+   */
+  delete(collection, doc) {
+    return new Promise((resolve, reject) => {
+      let ref = db.collection(collection).doc(doc);
+      ref.delete().then(() => {
+        resolve(true);
+        console.log('delete succes')
+      }).catch(() => {
+        reject('delete error');
+      })
+    })
   }
 
 }
 
 const firebaseController = FirebaseController.getInstance();
 
-firebaseController.create( 'test', 'test2', {
-  gogo: 'gogogo'
-})
 
 module.exports = {
   firebaseController

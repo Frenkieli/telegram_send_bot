@@ -5,7 +5,7 @@ var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 require("dotenv").config();
 
-require('./models/firebaseInterface');
+require('./models/dataModel');
 
 var indexRouter = require('./routes/index');
 var botsRouter = require('./routes/bots');
