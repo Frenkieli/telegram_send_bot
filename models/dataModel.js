@@ -135,26 +135,25 @@ function chackModelFormat(databaseName, data, verifyType = 0) {
   return check
 }
 
-(async () => {
-  console.log(await ModelDataHandler.get('channelList'), 'getdata');
-  console.log(await ModelDataHandler.cteate('channelList', {
-    id: 45312,
-    title: 'bbb',
-    type: 'channel'
-  }));
-  setTimeout(async () => {
-    console.log(await ModelDataHandler.update('channelList', {
-      id: 45312,
-      title: 'gogogo'
-    }));
-  }, 1000);
-  setTimeout(async () => {
-    console.log(await ModelDataHandler.delete('channelList', {
-      id: 45312,
-    }));
-  }, 2000);
-
-})();
+// (async () => {
+// console.log(await ModelDataHandler.get('channelList'), 'getdata');
+// console.log(await ModelDataHandler.cteate('channelList', {
+//   id: 45312,
+//   title: 'bbb',
+//   type: 'channel'
+// }));
+// setTimeout(async () => {
+//   console.log(await ModelDataHandler.update('channelList', {
+//     id: 45312,
+//     title: 'gogogo'
+//   }));
+// }, 1000);
+// setTimeout(async () => {
+//   console.log(await ModelDataHandler.delete('channelList', {
+//     id: 45312,
+//   }));
+// }, 2000);
+// })();
 
 module.exports = {
   ModelDataHandler
@@ -166,10 +165,10 @@ module.exports = {
  */
 const databaseModels = {
   administrator: {
-    state: 'number', // 0 stand      - save on server
+    // state: 'number', // 0 stand      - save on server
     id: 'number',
     title: 'string',
-    enableChannel: 'array' // e.g. [ 2694156, 489456] save channel id
+    enableChannel: 'object' // e.g. {2694156 : true, 489456 : true } save channel id
   },
   channelList: {
     id: 'number',

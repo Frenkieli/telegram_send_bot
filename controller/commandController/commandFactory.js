@@ -6,7 +6,6 @@ const { objectTransformToFormData } = require("../dataTransformHandler");
 
 const { dataBus, ModifyData } = require("../../models/dataBus");
 
-const channelList = dataBus.getData("channelList");
 
 /**
  * @description base command class
@@ -19,7 +18,8 @@ class Command extends ModifyData {
     this.objectTransformToFormData = objectTransformToFormData;
     this.sendTelegramMessage = sendTelegramMessage;
     this.sendTelegramGroupMessage = sendTelegramGroupMessage;
-    this.channelList = channelList;
+    this.channelList = dataBus.getData("channelList");
+    this.administratorList = dataBus.getData("administratorList");
   }
 
   /**

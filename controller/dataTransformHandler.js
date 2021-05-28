@@ -34,6 +34,7 @@ function parseDataToTelegram(estringa) {
       caption: estringa.message.caption ? estringa.message.caption : "",
     };
   }
+  payload.chat_id = estringa.message.chat.id;
   return payload;
 }
 

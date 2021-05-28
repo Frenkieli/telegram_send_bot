@@ -17,7 +17,7 @@ class ListCommand extends Command {
     let enableChannelsList = [];
     let keyboardData = [];
     this.channelList.forEach((value, index) => {
-      if (value.enable) {
+      if (this.administratorList.get(data.chat_id).enableChannel[value.id]) {
         enableChannelsList.push(value.title);
         keyboardData.push([
           {

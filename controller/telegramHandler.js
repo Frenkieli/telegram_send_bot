@@ -2,7 +2,7 @@ const fetch = require("node-fetch");
 const { objectTransformToFormData } = require("./dataTransformHandler");
 const { dataBus } = require("../models/dataBus");
 
-const channelList = dataBus.getData("channelList");
+const administratorList = dataBus.getData("administratorList");
 
 /**
  * @description send massage to telegram
@@ -33,22 +33,22 @@ function sendTelegramMessage(data) {
  *
  * @param {object} rawData
  */
-function sendTelegramGroupMessage(rawData) {
-  channelList.forEach((value) => {
-    if (value.enable) {
-      let data = objectTransformToFormData(
-        Object.assign(
-          {
-            parse_mode: "HTML",
-            chat_id: value.id,
-          },
-          rawData
-        )
-      );
+function sendTelegramGroupMessage(rawData, enableChannelList = null) {
+  const enableChannel = enableChannelList || administratorList.get(rawData.chat_id).enableChannel;
+  delete rawData.chat_id;
+  for (let key in enableChannel) {
+    let data = objectTransformToFormData(
+      Object.assign(
+        {
+          parse_mode: "HTML",
+          chat_id: Number(key),
+        },
+        rawData
+      )
+    );
 
-      sendTelegramMessage(data);
-    }
-  });
+    sendTelegramMessage(data);
+  }
 }
 
 module.exports = {

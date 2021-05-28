@@ -105,6 +105,7 @@ function multitudeForwardHandler(estringa) {
   multitudeSendData[estringa.message.media_group_id].timeout = setTimeout(
     () => {
       sendTelegramGroupMessage({
+        chat_id: estringa.message.chat.id,
         method: "sendMediaGroup",
         media: JSON.stringify(
           multitudeSendData[estringa.message.media_group_id].data

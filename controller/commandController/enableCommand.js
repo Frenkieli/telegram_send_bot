@@ -22,7 +22,8 @@ class EnableCommand extends Command {
       inText[inText.length - 1] &&
       this.channelList.has(parseInt(inText[inText.length - 1]))
     )
-      this.setChannelList("modifyIndex", {
+      this.setAdministratorList("modifyEnable", {
+        chat_id : data.chat_id,
         key: parseInt(inText[inText.length - 1]),
         enable: enable,
       });

@@ -1,24 +1,14 @@
-let channelList = new Map();
+const { ModelDataHandler } = require('./dataModel');
 
-JSON.parse(process.env.VUE_APP_CHANNELLIST).forEach((value) => {
-  channelList.set(
-    value.id,
-    Object.assign(
-      {
-        enable: false,
-      },
-      value
-    )
-  );
-});
 /**
  * @description cache data center
  *
  * @class DataBus
  */
 class DataBus {
-  constructor(channelList) {
-    this.channelList = channelList;
+  constructor() {
+    this.channelList = new Map();
+    this.administratorList = new Map();
   }
 
   /**
@@ -37,6 +27,42 @@ class DataBus {
   }
 
   /**
+   * @description databus install
+   *
+   * @memberof DataBus
+   */
+  async init() {
+    let channelListResult = await ModelDataHandler.get('channelList');
+    let administratorResult = await ModelDataHandler.get('administrator');
+    if (channelListResult.code === 1) {
+      for (let key in channelListResult.data) {
+        this.channelList.set(
+          Number(key),
+          Object.assign(
+            {
+              enable: false,
+            },
+            channelListResult.data[key]
+          )
+        );
+      }
+    }
+    if (administratorResult.code === 1) {
+      for (let key in administratorResult.data) {
+        this.administratorList.set(
+          Number(key),
+          Object.assign(
+            {
+              state: 0,
+            },
+            administratorResult.data[key]
+          )
+        );
+      }
+    }
+  }
+
+  /**
    * @description get cache data
    *
    * @param {string} type which data
@@ -49,7 +75,9 @@ class DataBus {
       case "channelList":
         data = this.channelList;
         break;
-
+      case "administratorList":
+        data = this.administratorList;
+        break;
       default:
         data = null;
         break;
@@ -71,6 +99,10 @@ class DataBus {
         this.#setChannelList(command, data);
         break;
 
+      case "administratorList":
+        this.#setAdministratorList(command, data);
+        break;
+
       default:
         break;
     }
@@ -84,31 +116,62 @@ class DataBus {
    * @memberof DataBus
    */
   #setChannelList(command, data) {
+    let vm = this;
     let channelKey;
     switch (command) {
       case "addChannel":
-        if (!this.channelList.has(data.id)) {
+        if (!vm.channelList.has(data.id)) {
           console.log("Bot join channel : " + data.title);
-          this.channelList.set(data.id, data);
+          vm.channelList.set(data.id, data);
+          ModelDataHandler.cteate('channelList', data);
         }
         break;
       case "deleteChannel":
-        if (this.channelList.has(data.id)) {
+        if (vm.channelList.has(data.id)) {
           console.log("Bot leave channel : " + data.title);
-          this.channelList.delete(data.id);
+
+          vm.channelList.delete(data.id);
+          ModelDataHandler.delete('channelList', { id: data.id });
         }
         break;
       case "modifyIndex":
         channelKey = data.key;
         delete data.key;
-        let object = this.channelList.get(channelKey);
-        this.channelList.set(channelKey, Object.assign(object, data));
+        let object = vm.channelList.get(channelKey);
+        vm.channelList.set(channelKey, Object.assign(object, data));
+        break;
+      default:
+        break;
+    }
+  }
+
+  /**
+   * @description set adminlist data
+   * @param {string} command
+   * @param {*} data
+   * @private
+   * @memberof DataBus
+   */
+  #setAdministratorList(command, data) {
+    switch (command) {
+      case "modifyEnable":
+        let administratorListData = this.administratorList.get(data.chat_id);
+        if (data.enable === true) {
+          administratorListData.enableChannel[data.key] = true;
+        } else {
+          delete administratorListData.enableChannel[data.key];
+        }
+        ModelDataHandler.update('administrator', {
+          id: administratorListData.id,
+          enableChannel: administratorListData.enableChannel
+        });
         break;
       default:
         break;
     }
   }
 }
+
 
 /**
  * @description when class need to modify data
@@ -126,9 +189,23 @@ class ModifyData {
   setChannelList(command, data) {
     dataBus.setData("channelList", command, data);
   }
+
+
+  /**
+   * @description set data
+   *
+   * @param { string } command
+   * @param {*} data
+   * @memberof Command
+   */
+  setAdministratorList(command, data) {
+    dataBus.setData("administratorList", command, data);
+  }
 }
 
-let dataBus = new DataBus(channelList);
+let dataBus = new DataBus();
+
+dataBus.init();
 
 module.exports = {
   dataBus,
