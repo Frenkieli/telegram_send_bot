@@ -4,6 +4,9 @@ const { commandAssign } = require("./commandController/commandAssign");
 const {
   botChatChangeHandler,
 } = require("./receiverController/botChatChangeHandler");
+const { dataBus } = require('../models/dataBus');
+
+const administratorList = dataBus.getData('administratorList');
 
 /**
  * @description receive telegram data
@@ -35,10 +38,7 @@ function checkUserIdAndChartId(chatData) {
   let chack = false;
   if (
     chatData.type === "private" &&
-    (chatData.id === 1213797612 || // frenkie
-    chatData.id === 937869921 || // roy
-    chatData.id === 1214387140 || // 新來工讀生
-      chatData.id === 1005157522) // 阿祥
+    administratorList.has(chatData.id)
   ) {
     chack = true;
     console.log("receive user " + chatData.id + " message");
