@@ -7,7 +7,7 @@ const FormData = require("form-data");
  * @return {*} 
  */
 function parseDataToTelegram(estringa) {
-  var payload;
+  var payload ={};
   if (estringa.message.text) {
     payload = {
       method: "sendMessage",
@@ -31,6 +31,13 @@ function parseDataToTelegram(estringa) {
     payload = {
       method: "sendVideo",
       video: vidoe.file_id,
+      caption: estringa.message.caption ? estringa.message.caption : "",
+    };
+  }else if(estringa.message.animation) {
+    animation = estringa.message.animation;
+    payload = {
+      method: "sendAnimation",
+      animation: animation.file_id,
       caption: estringa.message.caption ? estringa.message.caption : "",
     };
   }
